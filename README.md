@@ -4,7 +4,7 @@ Repositorio oficial del trabajo final. Sistema de atención al cliente automatiz
 
 ---
 
-## Documentación Principal
+## Documentación principal
 
 Toda la especificación técnica, manual operativo de datos, esquemas de transferencia JSON, arquitectura y matriz de costos se encuentran consolidados en la documentación oficial:
 
@@ -12,7 +12,7 @@ Toda la especificación técnica, manual operativo de datos, esquemas de transfe
 
 ---
 
-## Stack Tecnológico
+## Stack tecnológico
 
 * **Orquestador:** n8n
 * **Modelo Principal:** Google Gemini 3.1 Flash Lite (Temperatura 0.0)
@@ -30,7 +30,7 @@ Toda la especificación técnica, manual operativo de datos, esquemas de transfe
 
 ---
 
-## Videos Demostrativos
+## Videos demostrativos
 
 * 🎬 **[Ver Video Demostrativo 1](https://drive.google.com/file/d/19wpejxuuDeefQkNTQkx_QbrWcPt0Atg6/view?usp=drive_link)**
 * 🎬 **[Ver Video Demostrativo 2](https://drive.google.com/file/d/11aSEeOMlDA5O4SrRSVfusDneEbA0Xcoz/view?usp=drive_link)**
