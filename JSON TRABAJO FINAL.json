@@ -1,0 +1,1233 @@
+{
+  "name": "TRABAJO FINAL",
+  "nodes": [
+    {
+      "parameters": {
+        "inputText": "={{ $json.property_consulta }}",
+        "categories": {
+          "categories": [
+            {
+              "category": "reclamos",
+              "description": "Quejas, disconformidad o insatisfacción con el servicio o producto recibido. Incluye reclamos por cobros indebidos, fallas en la facturación, demoras excesivas, incumplimiento de lo prometido o solicitudes de cancelación y reembolso."
+            },
+            {
+              "category": "ventas",
+              "description": "Interés comercial directo de un cliente potencial o actual. Incluye consultas sobre precios, cotizaciones, planes disponibles, presupuestos, promociones, características de productos o pasos para contratar un servicio."
+            },
+            {
+              "category": "soporte",
+              "description": "Inconvenientes técnicos, errores de sistema o dudas sobre cómo usar la plataforma. Incluye problemas para iniciar sesión, restablecer contraseñas, fallas de acceso, bugs o solicitudes de guías paso a paso para configurar una herramienta."
+            },
+            {
+              "category": "otras consultas",
+              "description": "Consultas generales sobre la empresa que no representan una venta, un problema técnico ni un reclamo. Incluye preguntas sobre horarios de atención, ubicación física de oficinas, políticas internas o información institucional."
+            }
+          ]
+        },
+        "options": {
+          "fallback": "other"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.textClassifier",
+      "typeVersion": 1.1,
+      "position": [
+        -4144,
+        -1792
+      ],
+      "id": "a39bc2f8-8d8e-40a6-8a78-81f208d1e83e",
+      "name": "Text Classifier"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {
+          "temperature": 0
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -4144,
+        -1536
+      ],
+      "id": "5b603d57-ec23-4a8a-8cc5-0f75afbf4a42",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "kjmva9LLRt0hTFZJ",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=CONTEXTO DE LA CONSULTA:\n* Directiva de categoría: {{ $json.instruccion }}\n* Nombre del cliente: {{ $('Formulario Mesa de Ayuda').item.json.Nombre }}\n* Email del cliente: {{ $('Formulario Mesa de Ayuda').item.json.Email }}\n\nCONSULTA DEL CLIENTE:\n{{ $json.consulta }}",
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "=Eres un asistente virtual de atención al cliente profesional, empático y eficiente para una empresa de servicios. Tu objetivo es resolver las consultas de los clientes en las áreas de Ventas, Soporte Técnico, Reclamos y Consultas Generales.\n\n### REGLA DE ORO Y FLUJO DE TRABAJO (OBLIGATORIO)\nAntes de generar cualquier respuesta al usuario, DEBES seguir estrictamente estos pasos:\n\n1. BÚSQUEDA OBLIGATORIA: Consulta siempre la herramienta base_de_conocimiento con las palabras clave de la pregunta del cliente antes de responder.\n2. FUENTE ÚNICA DE VERDAD: Basa tu respuesta ÚNICAMENTE en la información recuperada de la base_de_conocimiento. Queda estrictamente prohibido asumir, adivinar o utilizar conocimientos externos que no estén explícitamente detallados en la herramienta.\n3. MANEJO DE INFORMACIÓN FALTANTE: Si la base_de_conocimiento no devuelve resultados relevantes o la información es insuficiente para responder, NO inventes una respuesta. Responde amablemente indicando que no posees ese dato en este momento y ofrece derivar la consulta con un agente humano.\n4. COMO RESPONDER: Generá ÚNICAMENTE la respuesta al usuario.\n5. Si la consulta del usuario no se puede responder con la información de tu base de conocimiento, debes iniciar tu respuesta obligatoriamente con la palabra clave: [DERIVAR_SLACK] seguida de tu mensaje explicativo para el cliente.\n\n---\n\n### DIRECTRICES DE ATENCIÓN Y TONO\n* Profesional, cercano y servicial.\n* Respuestas claras, concisas y estructuradas (usa listas o viñetas cuando expliques pasos o requisitos).\n* Mantén siempre la calma y la cortesía, especialmente ante clientes frustrados.",
+          "maxIterations": 4
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -3408,
+        -1744
+      ],
+      "id": "3c8b187c-c08a-477a-940c-0374b51966ff",
+      "name": "AI Agent",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {
+          "temperature": 0
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -3536,
+        -1552
+      ],
+      "id": "3e5274a6-afe9-48b7-a873-4401f762a8cc",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "kjmva9LLRt0hTFZJ",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Base de conocimiento oficial y verificada de la empresa de producción de eventos corporativos y sociales. Utiliza esta herramienta obligatoriamente para consultar información sobre paquetes comerciales, cotizaciones, requerimientos técnicos y de montaje, políticas de cancelación, gestión de garantías/reclamos y normas institucionales. Es la única fuente autorizada para responder consultas sobre procedimientos y políticas de la compañía.",
+        "memoryKey": {
+          "__rl": true,
+          "value": "informacion_empresa_rag",
+          "mode": "list"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        -3200,
+        -1552
+      ],
+      "id": "ab689c8f-caff-408e-8957-ae4cbc22ad2d",
+      "name": "Simple Vector Store"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "memoryKey": {
+          "__rl": true,
+          "value": "informacion_empresa_rag",
+          "mode": "list",
+          "cachedResultName": "informacion_empresa_rag"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        -3248,
+        -2432
+      ],
+      "id": "8c5d9f31-d479-483a-80fb-b9b01d801f3c",
+      "name": "Simple Vector Store2"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-embedding-2"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -3248,
+        -2256
+      ],
+      "id": "9680f60b-f3a2-4eef-9869-9b09671281f8",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "kjmva9LLRt0hTFZJ",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonMode": "expressionData",
+        "jsonData": "={{ $json['property_título'] }}{{ $json.property_contenido }}",
+        "textSplittingMode": "custom",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        -3120,
+        -2256
+      ],
+      "id": "83f77f46-601f-46ba-aff5-19dec187115e",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "chunkSize": 500,
+        "chunkOverlap": 50,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        -3120,
+        -2112
+      ],
+      "id": "3ab458dc-1c11-44e6-857f-86f224eeb859",
+      "name": "Recursive Character Text Splitter"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-embedding-2"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -3200,
+        -1408
+      ],
+      "id": "522ab2e8-b3d6-4447-bb73-3cf5bcd55711",
+      "name": "Embeddings Google Gemini1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "kjmva9LLRt0hTFZJ",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.ID }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        -3312,
+        -1456
+      ],
+      "id": "b012cf11-0e24-4ec7-86fc-7d9579233994",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "53470945-d25d-4852-ab65-6ebd1c5e0bb2",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": "=Aprobado",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -2304,
+        -2128
+      ],
+      "id": "ed1cf2ba-cd6c-4fa1-8466-e8cd7c69a475",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "dataSourceId": {
+          "__rl": true,
+          "value": "3d99db99-cd5e-80bf-baf3-000b993b5f0f",
+          "mode": "list",
+          "cachedResultName": "Base de conocimiento",
+          "cachedResultUrl": "https://app.notion.com/p/3d99db99cd5e805f91d6feb2aa142024"
+        },
+        "returnAll": true,
+        "filterType": "manual",
+        "filters": {
+          "conditions": [
+            {
+              "key": "ESTADO|select",
+              "condition": "equals",
+              "optionValue": "Publicado"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 3,
+      "position": [
+        -3456,
+        -2432
+      ],
+      "id": "7a35b8cd-a935-47f5-a389-812c8e3a6cce",
+      "name": "Get many database pages",
+      "credentials": {
+        "notionApi": {
+          "id": "jr99eM7Q0aO0yhQ4",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Formulario Mesa de Ayuda').item.json.Email }}",
+        "subject": "Respuesta a la consulta para tu evento",
+        "message": "={{ $('AI Agent').item.json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -2032,
+        -2208
+      ],
+      "id": "48989cc3-2b52-4025-880f-1a685155cfc9",
+      "name": "Respuesta aprobada - enviar a cliente",
+      "webhookId": "41b1d16b-1ce2-4743-8be4-c953c563e846",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "qQmaNMOGaFJWG9ix",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Formulario Mesa de Ayuda').item.json.Email }}",
+        "subject": "Respuesta a tu consulta sobre tu evento",
+        "message": "={{ $('AI Agent').item.json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -2528,
+        -1680
+      ],
+      "id": "6cb1b17b-288b-4894-bbfe-a6ebb0080c70",
+      "name": "Envio de respuesta directa",
+      "webhookId": "6915e9cb-08d8-4344-9caf-ac7b392d9bcb",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "qQmaNMOGaFJWG9ix",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $(\"Consulta por reclamo\").isExecuted ? 'reclamo' : 'otra' }}",
+                    "rightValue": "reclamo",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "be5e76b5-77f6-43b7-bd35-ed9f07a85e64"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "HITL Reclamos"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "73af2b58-3313-46d9-afc8-24592dd20486",
+                    "leftValue": "={{ $json.output }}",
+                    "rightValue": "[DERIVAR_SLACK]",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Derivacion comercial"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "6a156968-82d9-4b93-b60c-008d52b70118",
+                    "leftValue": "={{ $json.output }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Respuesta Directa"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -2832,
+        -1904
+      ],
+      "id": "bd4696f4-8226-40d4-a186-8456a3b1a4ac",
+      "name": "Clasificacion de respuesta previo envio"
+    },
+    {
+      "parameters": {
+        "formTitle": "Mesa de ayuda",
+        "formDescription": "Completá los datos y tu consulta",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Nombre",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Email",
+              "fieldType": "email",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Consulta",
+              "fieldType": "textarea",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        -4528,
+        -1744
+      ],
+      "id": "07bd925d-a91e-4a27-a1ba-0046a1d38ffa",
+      "name": "Formulario Mesa de Ayuda",
+      "webhookId": "7ba453d3-ea6f-46c3-8393-eb0cc8752f06"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "dataSourceId": {
+          "__rl": true,
+          "value": "3df9db99-cd5e-807b-a3ef-000b28fb07c2",
+          "mode": "list",
+          "cachedResultName": "Tickets",
+          "cachedResultUrl": "https://app.notion.com/p/3df9db99cd5e8060a931cf7f7295e807"
+        },
+        "title": "=Ticket #{{ $execution.id }} - {{ $json.Nombre }}",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Nombre|title",
+              "title": "={{ $json.Nombre }}"
+            },
+            {
+              "key": "Email|rich_text",
+              "textContent": "={{ $json.Email }}"
+            },
+            {
+              "key": "Consulta|rich_text",
+              "textContent": "={{ $json.Consulta }}"
+            },
+            {
+              "key": "Estado|select",
+              "selectValue": "nuevo"
+            },
+            {
+              "key": "ID|rich_text",
+              "textContent": "=TICK-{{ $execution.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 3,
+      "position": [
+        -4320,
+        -1744
+      ],
+      "id": "d805c081-4395-4725-a1f2-aed2fee232b0",
+      "name": "Registro de consulta en Base de Datos",
+      "credentials": {
+        "notionApi": {
+          "id": "jr99eM7Q0aO0yhQ4",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "41370007-9809-4f27-a6ff-936af8d1e310",
+              "name": "categoria",
+              "value": "reclamos",
+              "type": "string"
+            },
+            {
+              "id": "a399c2a9-2ead-4215-9b2b-11cc2db5a3c9",
+              "name": "ID",
+              "value": "={{ $('Registro de consulta en Base de Datos').item.json.property_id }}",
+              "type": "string"
+            },
+            {
+              "id": "87641343-6d8a-4a92-b360-d470b5889136",
+              "name": "instruccion",
+              "value": "Rol: Especialista en Contención y Gestión de Reclamos.\nObjetivo: Empatizar con el malestar del usuario, validar su insatisfacción y explicar el canal o protocolo de resolución.\nTono: Serena, sumamente respetuosa, empática y profesional.\nRestricciones: Responde únicamente según las políticas y términos oficiales documentados en la base de conocimiento (RAG). No asumas responsabilidad legal ni prometas devoluciones, reembolsos o compensaciones económicas si no están explícitamente autorizados por la documentación del RAG. Informa siempre que su reclamo ha sido registrado con prioridad para revisión interna.",
+              "type": "string"
+            },
+            {
+              "id": "bb7fbdd7-1b21-4173-a3cd-8c883be2c82f",
+              "name": "consulta",
+              "value": "={{ $json.property_consulta }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -3792,
+        -1968
+      ],
+      "id": "8491e57e-f7a2-44b5-8372-7b463ae8cbbf",
+      "name": "Consulta por reclamo"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "655a8df9-d939-460d-b22f-16dcfcf18d8e",
+              "name": "categoria",
+              "value": "ventas",
+              "type": "string"
+            },
+            {
+              "id": "4c16ffb3-c823-4025-a332-c3be779e04fc",
+              "name": "ID",
+              "value": "={{ $('Registro de consulta en Base de Datos').item.json.property_id }}",
+              "type": "string"
+            },
+            {
+              "id": "2489c6d9-0abd-43da-b8d0-7da0ffc54a8a",
+              "name": "instruccion",
+              "value": "Rol: Ejecutivo de Atención Comercial.\nObjetivo: Brindar información sobre planes, cotizaciones, características de productos o procesos de compra.\nTono: Entusiasta, profesional, claro y orientado a la conversión.\nRestricciones: Basa tus respuestas, precios, características y condiciones de contratación exclusivamente en los datos provistos por la base de conocimiento (RAG). Está estrictamente prohibido asumir tarifas, inventar promociones o prometer funcionalidades fuera del RAG. Si la información solicitada no está en la base de conocimiento, invita al usuario a coordinar una breve llamada con un asesor comercial.",
+              "type": "string"
+            },
+            {
+              "id": "73d4143b-1aac-42d0-bd99-8f16d07cf18b",
+              "name": "consulta",
+              "value": "={{ $json.property_consulta }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -3792,
+        -1824
+      ],
+      "id": "e18658fe-3419-4c16-960f-31017f31ad03",
+      "name": "Consulta por ventas"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b81403a8-2fcd-4e82-8490-18d1a1311504",
+              "name": "categoria",
+              "value": "soporte",
+              "type": "string"
+            },
+            {
+              "id": "f71155ca-72d5-4512-a5c5-daa6cc167fbd",
+              "name": "ID",
+              "value": "={{ $json.property_id }}",
+              "type": "string"
+            },
+            {
+              "id": "6020b15b-6b0f-4926-a228-6ffc84037cf4",
+              "name": "instruccion",
+              "value": "Rol: Especialista de Soporte Técnico Nivel 1.\nObjetivo: Resolver problemas técnicos, errores de acceso o guías de configuración del usuario.\nTono: Empático, paciente, didáctico y profesional.\nRestricciones: Basa tu respuesta únicamente en la información técnica disponible en la base de conocimiento (RAG). No inventes pasos de resolución, comandos ni funcionalidades que no figuren explícitamente en los documentos recuperados. Si la base de conocimiento no contiene la solución exacta, indícale amablemente al usuario que su caso será derivado al equipo técnico y solicita detalles adicionales (como capturas o mensajes de error).",
+              "type": "string"
+            },
+            {
+              "id": "70883779-0de8-4028-8bd8-814215c6538d",
+              "name": "consulta",
+              "value": "={{ $json.property_consulta }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -3792,
+        -1680
+      ],
+      "id": "40acd43f-5f71-40c7-a287-1655cf31b0c7",
+      "name": "Consulta por soporte"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e92bc754-4ad7-4e66-b347-2d9d73049f56",
+              "name": "categoria",
+              "value": "otras consultas",
+              "type": "string"
+            },
+            {
+              "id": "b2bb0f88-bdde-4fb7-b8fd-e1b25491c082",
+              "name": "ID",
+              "value": "={{ $json.property_id }}",
+              "type": "string"
+            },
+            {
+              "id": "bf2c4c3f-9d80-411c-bec9-c5ff7ae34f67",
+              "name": "instruccion",
+              "value": "Rol: Representante de Atención al Cliente Institucional.\nObjetivo: Responder consultas generales sobre la empresa (horarios, ubicación, canales oficiales, información general).\nTono: Formal, cordial, claro y conciso.\nRestricciones: Basa la respuesta únicamente en la información institucional de la base de conocimiento (RAG). No especules sobre datos de la empresa que no aparezcan en los documentos. Si la pregunta excede lo documentado en el RAG, orienta amablemente al usuario a comunicarse por los canales oficiales.",
+              "type": "string"
+            },
+            {
+              "id": "92d9f4f2-73a5-4876-8616-b06b1eb3e22d",
+              "name": "consulta",
+              "value": "={{ $json.property_consulta }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -3792,
+        -1520
+      ],
+      "id": "2718e6b5-3ad2-43f6-8e97-8e186115c482",
+      "name": "Otras consultas"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-haiku-4-5-20251001",
+          "mode": "list",
+          "cachedResultName": "Claude Haiku 4.5"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.5,
+      "position": [
+        -3424,
+        -1584
+      ],
+      "id": "3c10b1b7-24f9-4bda-9715-31879458eb79",
+      "name": "Anthropic Chat Model",
+      "credentials": {
+        "anthropicApi": {
+          "id": "RYq2x97xm1MDDkSB",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "sendTo": "agosbini@gmail.com",
+        "subject": "=[REVISIÓN REQUERIDA] Reclamo de {{ $('Formulario Mesa de Ayuda').item.json.Nombre }} - {{ $('Registro de consulta en Base de Datos').item.json.property_id }}",
+        "message": "=🚨 RECLAMO REQUERE APROBACIÓN\n\n• Cliente: {{ $('Formulario Mesa de Ayuda').item.json.Nombre }}\n• Email: {{ $('Formulario Mesa de Ayuda').item.json.Email }}\n• Ticket: {{ $('Registro de consulta en Base de Datos').item.json.property_id }}\n• Consulta / Reclamo original:\n\"{{ $('Formulario Mesa de Ayuda').item.json.Consulta }}\"\n\n--------------------------------------------------\n🤖 Propuesta de respuesta generada por la IA:\n--------------------------------------------------\n{{ $('AI Agent').item.json.output }}\n--------------------------------------------------\nPor favor, presiona uno de los botones a continuación para responder al cliente o rechazar el borrador.",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double",
+            "approveLabel": "Aprobado",
+            "disapproveLabel": "Rechazado"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -2528,
+        -2064
+      ],
+      "id": "0588e60b-b4f2-45c4-bdbe-846bae3dbe68",
+      "name": "HITL - Requiere aprobación",
+      "webhookId": "c8c2b7e9-3c7e-4320-b1e9-34a90c146c1e",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "qQmaNMOGaFJWG9ix",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0C05L2HS57",
+          "mode": "list",
+          "cachedResultName": "oficina-reclamos"
+        },
+        "text": "=🚨 *RECLAMO RECHAZADO – REQUIERE ATENCIÓN MANUAL*\n<!here> *Se ha rechazado la propuesta de respuesta automática.* Un agente debe revisar este caso y responder de forma manual al cliente.\n\n📋 *DATOS DEL TICKET*\n• *Cliente:* {{ $('Formulario Mesa de Ayuda').item.json.Nombre }}\n• *Email:* {{ $('Formulario Mesa de Ayuda').item.json.Email }}\n• *Ticket:* {{ $('Registro de consulta en Base de Datos').item.json.property_id }}\n\n💬 *RECLAMO ORIGINAL DEL CLIENTE:*\n> {{ $('Formulario Mesa de Ayuda').item.json.Consulta }}\n\n🤖 *BORRADOR DE IA RECHAZADO:*",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.6,
+      "position": [
+        -2032,
+        -2032
+      ],
+      "id": "5d8b12e3-9443-4e93-b2fe-fbfd8f5bedd6",
+      "name": "HITL Respuesta rechazada - revision en oficina de reclamos",
+      "webhookId": "3084c90b-cc95-46d0-87c0-501f798fa478",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "TwLWaNTYbekGMsFQ",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0C03MYVBD0",
+          "mode": "list",
+          "cachedResultName": "oficina_comercial"
+        },
+        "text": "=🚨 *NUEVA DERIVACIÓN A OFICINA COMERCIAL* \n\n• *Cliente:* {{ $('Formulario Mesa de Ayuda').item.json.Nombre }} \n• *Email:* {{ $('Formulario Mesa de Ayuda').item.json.Email }} \n• *Consulta del cliente:* {{ $('Formulario Mesa de Ayuda').item.json.Consulta }}  🤖 \n\n*Respuesta/Análisis de la IA:* {{ $json.output }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.6,
+      "position": [
+        -2592,
+        -2464
+      ],
+      "id": "028d5495-ed16-48ff-bc11-c542fd9976b7",
+      "name": "HITL - Derivacion si Agente no resuelve",
+      "webhookId": "054aa6f9-59e1-46f7-9765-1c60994646b2",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "TwLWaNTYbekGMsFQ",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "agosbini@gmail.com",
+        "subject": "🚨 [ALERTA CRÍTICA] Falló la IA - Requerida atención manual",
+        "message": "=🚨 ALERTA DE FALLO EN PROCESAMIENTO DE IA\n\nTanto el modelo principal (Gemini) como el modelo de respaldo (Claude) fallaron al intentar procesar una consulta. \n\n📋 DATOS DEL CLIENTE PARA ATENCIÓN MANUAL: \n• Ticket: {{ $('Registro de consulta en Base de Datos').item.json.property_id }}\n• Nombre: {{ $('Formulario Mesa de Ayuda').item.json.Nombre }}\n• Email: {{ $('Formulario Mesa de Ayuda').item.json.Email }}\n• Consulta: {{ $('Formulario Mesa de Ayuda').item.json.Consulta }}\n\n📌 ACCIÓN REQUERIDA: Contactar/responder manualmente a este cliente a la brevedad.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -3024,
+        -1728
+      ],
+      "id": "cf449ad0-0560-48bf-95d7-6d7f2b9af356",
+      "name": "Error Handle - Envio de alerta en caso de falla",
+      "webhookId": "d180ea43-268a-4dda-b665-94a8b1f200ff",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "qQmaNMOGaFJWG9ix",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "CENTRO DE BASE DE CONOCIMIENTO RAG",
+        "height": 576,
+        "width": 656
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -3520,
+        -2544
+      ],
+      "typeVersion": 1,
+      "id": "312ffaec-459f-40dd-9307-780e09301550",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Registro de consulta en Base de Datos').first().json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Estado|select",
+              "selectValue": "={{\n  $prevNode.name === 'Respuesta aprobada - enviar a cliente' ? 'Resuelto - Aprobado HITL' :\n  $prevNode.name === 'HITL Respuesta rechazada - revision en oficina de reclamos' ? 'Derivado a Slack - Rechazado HITL' :\n  $prevNode.name === 'Envio de respuesta directa' ? 'Resuelto - Directo IA' :\n  'Derivado a Slack - No resuelto IA'\n}}"
+            },
+            {
+              "key": "Respuesta IA|rich_text",
+              "textContent": "={{ $('AI Agent').first().json.output }}"
+            },
+            {
+              "key": "Categoria|select",
+              "selectValue": "={{\n  $(\"Consulta por ventas\").isExecuted ? 'ventas' :\n  $(\"Consulta por reclamo\").isExecuted ? 'reclamos' :\n  $(\"Consulta por soporte\").isExecuted ? 'soporte' :\n  'otras consultas'\n}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 3,
+      "position": [
+        -1728,
+        -1776
+      ],
+      "id": "0585e116-d112-44ee-9023-ac999f0c566c",
+      "name": "Registro y actualizacion de consultas",
+      "credentials": {
+        "notionApi": {
+          "id": "jr99eM7Q0aO0yhQ4",
+          "name": "Notion account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Classifier": {
+      "main": [
+        [
+          {
+            "node": "Consulta por reclamo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Consulta por ventas",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Consulta por soporte",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Otras consultas",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Otras consultas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Simple Vector Store2",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Simple Vector Store2",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Simple Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Clasificacion de respuesta previo envio",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Handle - Envio de alerta en caso de falla",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many database pages": {
+      "main": [
+        [
+          {
+            "node": "Simple Vector Store2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Respuesta aprobada - enviar a cliente",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HITL Respuesta rechazada - revision en oficina de reclamos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clasificacion de respuesta previo envio": {
+      "main": [
+        [
+          {
+            "node": "HITL - Requiere aprobación",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HITL - Derivacion si Agente no resuelve",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Envio de respuesta directa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formulario Mesa de Ayuda": {
+      "main": [
+        [
+          {
+            "node": "Registro de consulta en Base de Datos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registro de consulta en Base de Datos": {
+      "main": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consulta por reclamo": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consulta por ventas": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consulta por soporte": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Otras consultas": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Envio de respuesta directa": {
+      "main": [
+        [
+          {
+            "node": "Registro y actualizacion de consultas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respuesta aprobada - enviar a cliente": {
+      "main": [
+        [
+          {
+            "node": "Registro y actualizacion de consultas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HITL - Requiere aprobación": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HITL Respuesta rechazada - revision en oficina de reclamos": {
+      "main": [
+        [
+          {
+            "node": "Registro y actualizacion de consultas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HITL - Derivacion si Agente no resuelve": {
+      "main": [
+        [
+          {
+            "node": "Registro y actualizacion de consultas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Handle - Envio de alerta en caso de falla": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "478028a1-d926-445e-b329-cca73ae171cc",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b0f515eb5418692ee9e4007e0f88fac42ed937f0726fb74f74f00e678dc45b64"
+  },
+  "nodeGroups": [],
+  "id": "BNx650afsIdZ9pmn",
+  "tags": []
+}
